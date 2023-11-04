@@ -30,7 +30,11 @@ let Hooks = {}
 Hooks.Resizable = {
   mounted() {
     resizableGrid(this.el, this)
-  }
+  },
+  // So it keeps working after liveview updates
+  updated() {
+    this.mounted()
+  },
 }
 
 Hooks.Sortable = {
@@ -46,7 +50,7 @@ Hooks.Sortable = {
         this.pushEventTo(this.el, "reposition", params)
       }
     })
-  }
+  },
 }
 
 
@@ -126,8 +130,10 @@ function resizableGrid(table, hook) {
       }
     });
 
-    document.addEventListener('mouseup', function(e) {
-      hook.pushEventTo(table, "resize", curCol.style.width)
+    document.addEventListener('mouseup', function(_e) {
+      if (curCol) {
+        hook.pushEventTo(table, "resize", { width: parseInt(curCol.style.width), index: parseInt(curCol.dataset.index) })
+      }
 
       // console.log(this)
 
