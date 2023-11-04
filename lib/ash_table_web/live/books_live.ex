@@ -5,7 +5,7 @@ defmodule AshTableWeb.BooksLive do
   def render(assigns) do
     ~H"""
     <div>
-      <.live_component module={TableComponent} resource={AshTable.Book} id="books" />
+      <.live_component module={TableComponent} resource={AshTable.Book} api={AshTable.Library} id="books" />
     </div>
     """
   end

@@ -9,8 +9,7 @@ defmodule AshTableWeb.TableComponent do
   """
   def update(assigns, socket) do
     resource = assigns.resource
-
-    {:ok, records} = resource.read_all()
+    api = assigns.api
 
     cols =
       Ash.Resource.Info.fields(resource)
@@ -21,6 +20,18 @@ defmodule AshTableWeb.TableComponent do
           width: 400
         }
       end)
+
+    sort =
+      Enum.find(cols, fn col -> col[:sort] end)
+      |> case do
+        nil -> []
+        %{name: name, sort: sort_order} -> {name, sort_order}
+      end
+
+    records =
+      resource
+      |> Ash.Query.sort(sort)
+      |> api.read!()
 
     {:ok, assign(socket, Map.merge(assigns, %{records: records, cols: cols}))}
   end
@@ -94,7 +105,19 @@ defmodule AshTableWeb.TableComponent do
         end
       end)
 
-    {:noreply, assign(socket, cols: cols)}
+    sort =
+      Enum.find(cols, fn col -> col[:sort] end)
+      |> case do
+        nil -> []
+        %{name: name, sort: sort_order} -> {name, sort_order}
+      end
+
+    records =
+      socket.assigns.resource
+      |> Ash.Query.sort(sort)
+      |> socket.assigns.api.read!()
+
+    {:noreply, assign(socket, cols: cols, records: records)}
   end
 
   def handle_event("reposition", %{"index" => index, "new" => new_index} = params, socket) do
