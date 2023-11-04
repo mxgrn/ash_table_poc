@@ -13,6 +13,8 @@ defmodule AshTable.Repo.Migrations.CreateBooks do
       add :title, :text
       add :author, :text
       add :year, :bigint
+      add :inserted_at, :utc_datetime_usec, null: false, default: fragment("now()")
+      add :updated_at, :utc_datetime_usec, null: false, default: fragment("now()")
     end
   end
 
@@ -20,3 +22,4 @@ defmodule AshTable.Repo.Migrations.CreateBooks do
     drop table(:books)
   end
 end
+

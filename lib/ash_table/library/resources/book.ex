@@ -6,6 +6,7 @@ defmodule AshTable.Book do
     attribute :title, :string
     attribute :author, :string
     attribute :year, :integer
+    timestamps()
   end
 
   actions do

@@ -16,8 +16,10 @@ defmodule AshTableWeb.TableComponent do
       |> Enum.map(fn attribute ->
         %{
           name: attribute.name,
-          title: attribute.name |> to_string |> Macro.camelize(),
-          width: 400
+          title: attribute.name |> to_string |> String.capitalize() |> String.replace("_", " "),
+          width: 400,
+          sort: if(attribute.name == :inserted_at, do: :asc, else: nil),
+          read_only: attribute.name in [:id, :inserted_at, :updated_at]
         }
       end)
 
@@ -33,12 +35,31 @@ defmodule AshTableWeb.TableComponent do
       |> Ash.Query.sort(sort)
       |> api.read!()
 
-    {:ok, assign(socket, Map.merge(assigns, %{records: records, cols: cols}))}
+    {:ok,
+     assign(
+       socket,
+       Map.merge(assigns, %{
+         resource: resource,
+         api: api,
+         records: records,
+         cols: cols,
+         editing_cell: %{
+           field: nil,
+           row_id: nil
+         }
+       })
+     )}
   end
 
   def render(assigns) do
     ~H"""
-    <table class="w-1/3 divide-y divide-gray-300" phx-hook="Resizable" id="tableId">
+    <table
+      class="w-1/3 divide-y divide-gray-300 bg-gray-100"
+      phx-hook="Resizable"
+      id="tableId"
+      phx-click-away="stop_edit"
+      phx-target={@myself}
+    >
       <thead>
         <tr class="flex font-bold divide-x" phx-hook="Sortable" id="head-tr">
           <th
@@ -51,13 +72,7 @@ defmodule AshTableWeb.TableComponent do
             data={[index: i]}
           >
             <%= col.title %>
-            <span
-              :if={col[:sort]}
-              class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200"
-            >
-              <.icon :if={col[:sort] == :asc} name="hero-arrow-up" class="h-3" />
-              <.icon :if={col[:sort] == :desc} name="hero-arrow-down" class="h-3" />
-            </span>
+            <.sort_icon col={col} />
           </th>
         </tr>
       </thead>
@@ -68,13 +83,93 @@ defmodule AshTableWeb.TableComponent do
           class="flex divide-x"
           data={[index: i]}
         >
-          <td :for={col <- @cols} class="py-1 px-3" style={"width: #{col.width}px"}>
-            <%= Map.get(row, col.name) %>
+          <td
+            :for={col <- @cols}
+            style={"width: #{col.width}px"}
+            class={unless col.read_only, do: "cursor-pointer"}
+            phx-click={unless col.read_only, do: "start_edit_cell"}
+            phx-value-row_id={row.id}
+            phx-value-field={col.name}
+            phx-target={@myself}
+          >
+            <div
+              :if={!(@editing_cell.field == col.name && @editing_cell.row_id == to_string(row.id))}
+              class="py-1 px-3"
+            >
+              <%= Map.get(row, col.name) %>
+            </div>
+            <div :if={@editing_cell.field == col.name && @editing_cell.row_id == to_string(row.id)}>
+              <input
+                type="text"
+                value={Map.get(row, col.name)}
+                class="p-0 m-0 w-full border-none py-1 px-3"
+                phx-keydown="enter"
+                phx-key="Enter"
+                phx-change="input_change"
+                phx-target={@myself}
+                phx-click-away="stop_edit"
+              />
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
     """
+  end
+
+  # This only happens when editing_cell is set
+  def handle_event("enter", %{"value" => value} = params, socket) do
+    params |> dbg
+
+    socket.assigns.resource
+    |> AshTable.Library.get!(socket.assigns.editing_cell.row_id)
+    |> Ash.Changeset.for_update(:update, %{
+      socket.assigns.editing_cell.field => value
+    })
+    |> AshTable.Library.update!()
+
+    cols = socket.assigns.cols
+
+    sort =
+      cols
+      |> Enum.find(& &1[:sort])
+      |> case do
+        nil -> []
+        %{name: name, sort: sort_order} -> [{name, sort_order}]
+      end
+
+    records =
+      socket.assigns.resource
+      |> Ash.Query.sort(sort)
+      |> socket.assigns.api.read!()
+
+    {:noreply,
+     assign(socket,
+       editing_cell: %{field: nil, row_id: nil},
+       records: records
+     )}
+  end
+
+  def handle_event("input_change", params, socket) do
+    params |> dbg
+
+    {:noreply, socket}
+  end
+
+  def handle_event("start_edit_cell", params, socket) do
+    params |> dbg
+
+    {:noreply,
+     assign(socket,
+       editing_cell: %{
+         field: params["field"] |> String.to_existing_atom(),
+         row_id: params["row_id"]
+       }
+     )}
+  end
+
+  def handle_event("stop_edit", _params, socket) do
+    {:noreply, assign(socket, editing_cell: %{field: nil, row_id: nil})}
   end
 
   def handle_event("sort", %{"index" => index} = params, socket) do
@@ -161,5 +256,14 @@ defmodule AshTableWeb.TableComponent do
       end)
 
     {:noreply, assign(socket, cols: cols)}
+  end
+
+  defp sort_icon(assigns) do
+    ~H"""
+    <span :if={@col[:sort]} class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200">
+      <.icon :if={@col[:sort] == :asc} name="hero-arrow-up" class="h-3" />
+      <.icon :if={@col[:sort] == :desc} name="hero-arrow-down" class="h-3" />
+    </span>
+    """
   end
 end
