@@ -3,19 +3,17 @@ defmodule AshTableWeb.BooksLive do
   alias AshTableWeb.TableComponent
 
   def mount(_params, _session, socket) do
-    books = [
-      %{id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", year: 1925},
-      %{id: 2, title: "The Grapes of Wrath", author: "John Steinbeck", year: 1939},
-      %{id: 3, title: "Nineteen Eighty-Four", author: "George Orwell", year: 1949},
-      %{id: 4, title: "Ulysses", author: "James Joyce", year: 1922}
-    ]
+    {:ok, books} = AshTable.Book.read_all()
 
-    cols = [
-      %{name: :id, title: "ID", width: 100},
-      %{name: :title, title: "Title", width: 200},
-      %{name: :author, title: "Author", width: 200},
-      %{name: :year, title: "Year", width: 100}
-    ]
+    cols =
+      Ash.Resource.Info.fields(AshTable.Book)
+      |> Enum.map(fn attribute ->
+        %{
+          name: attribute.name,
+          title: attribute.name |> to_string |> String.upcase(),
+          width: 400
+        }
+      end)
 
     {:ok, assign(socket, books: books, cols: cols)}
   end

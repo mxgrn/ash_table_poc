@@ -3,6 +3,10 @@ defmodule AshTableWeb.TableComponent do
 
   import AshTableWeb.CoreComponents
 
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
+  end
+
   def render(assigns) do
     ~H"""
     <table class="w-1/3 divide-y divide-gray-300" phx-hook="Resizable" id="tableId">
@@ -11,7 +15,7 @@ defmodule AshTableWeb.TableComponent do
           <th :for={col <- @cols} class="inline-flex py-1 px-3" style={"width: #{col.width}px"}>
             <%= col.title %>
             <span class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200">
-              <.icon name="hero-arrow-up" class="h-3" />
+              <.icon name="hero-chevron-up" class="h-3" />
             </span>
           </th>
         </tr>
