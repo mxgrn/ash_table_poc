@@ -74,6 +74,7 @@ defmodule AshTableWeb.TableComponent do
             <%= col.title %>
             <.sort_icon col={col} />
           </th>
+          <th class="inline-flex py-1 px-3" style="width: 20px"></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
@@ -105,11 +106,13 @@ defmodule AshTableWeb.TableComponent do
                 class="p-0 m-0 w-full border-none py-1 px-3"
                 phx-keydown="enter"
                 phx-key="Enter"
-                phx-change="input_change"
                 phx-target={@myself}
                 phx-click-away="stop_edit"
               />
             </div>
+          </td>
+          <td class="inline-flex py-1 px-3" style="width: 20px">
+            <.icon name="hero-dots" class="h-3" />
           </td>
         </tr>
       </tbody>
@@ -150,15 +153,7 @@ defmodule AshTableWeb.TableComponent do
      )}
   end
 
-  def handle_event("input_change", params, socket) do
-    params |> dbg
-
-    {:noreply, socket}
-  end
-
   def handle_event("start_edit_cell", params, socket) do
-    params |> dbg
-
     {:noreply,
      assign(socket,
        editing_cell: %{
@@ -172,11 +167,7 @@ defmodule AshTableWeb.TableComponent do
     {:noreply, assign(socket, editing_cell: %{field: nil, row_id: nil})}
   end
 
-  def handle_event("sort", %{"index" => index} = params, socket) do
-    # Put your logic here to deal with the changes to the list order
-    # and persist the data
-    params |> dbg
-
+  def handle_event("sort", %{"index" => index} = _params, socket) do
     index = String.to_integer(index)
 
     # Update the order of the columns in assigns
@@ -215,11 +206,7 @@ defmodule AshTableWeb.TableComponent do
     {:noreply, assign(socket, cols: cols, records: records)}
   end
 
-  def handle_event("reposition", %{"index" => index, "new" => new_index} = params, socket) do
-    # Put your logic here to deal with the changes to the list order
-    # and persist the data
-    params |> dbg
-
+  def handle_event("reposition", %{"index" => index, "new" => new_index} = _params, socket) do
     # Somehow Sortable passes index as a string, as opposed to new_index
     index = String.to_integer(index)
 
@@ -236,11 +223,7 @@ defmodule AshTableWeb.TableComponent do
     {:noreply, assign(socket, cols: cols)}
   end
 
-  def handle_event("resize", %{"width" => width, "index" => index} = params, socket) do
-    # Put your logic here to deal with the changes to the list order
-    # and persist the data
-    params |> dbg
-
+  def handle_event("resize", %{"width" => width, "index" => index} = _params, socket) do
     # Update the width of the column in assigns
     cols = socket.assigns.cols
 

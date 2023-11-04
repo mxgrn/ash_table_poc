@@ -13,6 +13,10 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
     - Multiple TableComponents are not yet supported on the same page due to app.js not playing nicely with it.
 
+## Running seeds from remote console
+
+    Code.compile_file "/app/lib/ash_table-0.1.0/priv/repo/seeds.exs"
+
 ## Learn more
 
   * Official website: https://www.phoenixframework.org/
