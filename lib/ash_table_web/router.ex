@@ -18,6 +18,7 @@ defmodule AshTableWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/books", BooksLive, :index
   end
 
   # Other scopes may use custom stacks.
