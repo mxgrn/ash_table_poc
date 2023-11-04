@@ -14,13 +14,20 @@ defmodule AshTableWeb.TableComponent do
         <tr class="flex font-bold divide-x" phx-hook="Sortable" id="head-tr">
           <th
             :for={{col, i} <- @cols |> Enum.with_index()}
-            class="inline-flex py-1 px-3"
+            class="inline-flex py-1 px-3 cursor-pointer"
+            phx-click="sort"
+            phx-value-index={i}
+            phx-target={@myself}
             style={"width: #{col.width}px"}
             data={[index: i]}
           >
             <%= col.title %>
-            <span class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200">
-              <.icon name="hero-chevron-up" class="h-3" />
+            <span
+              :if={col[:sort]}
+              class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200"
+            >
+              <.icon :if={col[:sort] == :asc} name="hero-arrow-up" class="h-3" />
+              <.icon :if={col[:sort] == :desc} name="hero-arrow-down" class="h-3" />
             </span>
           </th>
         </tr>
@@ -39,6 +46,37 @@ defmodule AshTableWeb.TableComponent do
       </tbody>
     </table>
     """
+  end
+
+  def handle_event("sort", %{"index" => index} = params, socket) do
+    # Put your logic here to deal with the changes to the list order
+    # and persist the data
+    params |> dbg
+
+    index = String.to_integer(index)
+
+    # Update the order of the columns in assigns
+    cols = socket.assigns.cols
+
+    cols =
+      cols
+      |> Enum.with_index()
+      |> Enum.map(fn {col, i} ->
+        if i == index do
+          sort_order =
+            case col[:sort] do
+              nil -> :asc
+              :asc -> :desc
+              :desc -> nil
+            end
+
+          Map.put(col, :sort, sort_order)
+        else
+          Map.put(col, :sort, nil)
+        end
+      end)
+
+    {:noreply, assign(socket, cols: cols)}
   end
 
   def handle_event("reposition", %{"index" => index, "new" => new_index} = params, socket) do

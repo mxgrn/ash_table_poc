@@ -10,7 +10,7 @@ defmodule AshTableWeb.BooksLive do
       |> Enum.map(fn attribute ->
         %{
           name: attribute.name,
-          title: attribute.name |> to_string |> String.upcase(),
+          title: attribute.name |> to_string |> Macro.camelize(),
           width: 400
         }
       end)
