@@ -53,7 +53,6 @@ Hooks.Sortable = {
   },
 }
 
-
 let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, hooks: Hooks })
 
 // Show progress bar on live navigation and form submits
@@ -75,8 +74,6 @@ var tables = document.getElementsByClassName('resizable');
 for (var i = 0; i < tables.length; i++) {
   resizableGrid(tables[i]);
 }
-
-
 
 function resizableGrid(table, hook) {
   var row = table.getElementsByTagName('tr')[0],
@@ -130,12 +127,11 @@ function resizableGrid(table, hook) {
       }
     });
 
-    document.addEventListener('mouseup', function(_e) {
+    document.addEventListener('mouseup', function(e) {
+      // don't know why this is called multiple times, here's a work-around
       if (curCol) {
         hook.pushEventTo(table, "resize", { width: parseInt(curCol.style.width), index: parseInt(curCol.dataset.index) })
       }
-
-      // console.log(this)
 
       curCol = undefined;
       nxtCol = undefined;

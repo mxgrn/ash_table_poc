@@ -3,8 +3,26 @@ defmodule AshTableWeb.TableComponent do
 
   import AshTableWeb.CoreComponents
 
+  @doc """
+  Assigns:
+    - resource: The Ash resource module
+  """
   def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+    resource = assigns.resource
+
+    {:ok, records} = resource.read_all()
+
+    cols =
+      Ash.Resource.Info.fields(resource)
+      |> Enum.map(fn attribute ->
+        %{
+          name: attribute.name,
+          title: attribute.name |> to_string |> Macro.camelize(),
+          width: 400
+        }
+      end)
+
+    {:ok, assign(socket, Map.merge(assigns, %{records: records, cols: cols}))}
   end
 
   def render(assigns) do
@@ -34,7 +52,7 @@ defmodule AshTableWeb.TableComponent do
       </thead>
       <tbody class="divide-y divide-gray-200">
         <tr
-          :for={{row, i} <- @data |> Enum.with_index()}
+          :for={{row, i} <- @records |> Enum.with_index()}
           id={"row-#{row.id}"}
           class="flex divide-x"
           data={[index: i]}

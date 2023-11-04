@@ -9,6 +9,10 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
+## Known issues
+
+    - Multiple TableComponents are not yet supported on the same page due to app.js not playing nicely with it.
+
 ## Learn more
 
   * Official website: https://www.phoenixframework.org/
