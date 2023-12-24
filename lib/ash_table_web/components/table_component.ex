@@ -55,14 +55,14 @@ defmodule AshTableWeb.TableComponent do
   def render(assigns) do
     ~H"""
     <table
-      class="w-1/3 divide-y divide-gray-300 bg-gray-100"
+      class="w-1/3 divide-y divide-gray-300 bg-gray-50"
       phx-hook="Resizable"
       id="tableId"
       phx-click-away="stop_edit"
       phx-target={@myself}
     >
       <thead>
-        <tr class="flex divide-x" phx-hook="Sortable" id="head-tr">
+        <tr class="flex divide-x bg-gray-100" phx-hook="Sortable" id="head-tr">
           <th
             :for={{col, i} <- @cols |> Enum.with_index()}
             class="inline-flex py-1 px-3 cursor-pointer font-light"

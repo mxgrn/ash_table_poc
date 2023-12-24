@@ -29,7 +29,7 @@ defmodule AshTableWeb.RowComponent do
 
   def render(assigns) do
     ~H"""
-    <tr class="flex divide-x" data={[index: @record.id]}>
+    <tr class="flex divide-x hover:bg-gray-100" data={[index: @record.id]} id={"tr-#{@record.id}"}>
       <td
         :for={col <- @cols}
         style={"width: #{col.width}px"}
@@ -46,7 +46,7 @@ defmodule AshTableWeb.RowComponent do
           <input
             type="text"
             value={Map.get(@record, col.name)}
-            class="p-0 m-0 w-full border-none py-1 px-3"
+            class="p-0 m-0 w-full border-none py-1 px-3 text-sm"
             phx-keydown="enter"
             phx-key="Enter"
             phx-target={@myself}
