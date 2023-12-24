@@ -14,11 +14,12 @@ defmodule AshTableWeb.TableComponent do
 
     cols =
       Ash.Resource.Info.fields(resource)
+      |> Enum.reject(fn attribute -> attribute.name in [:id] end)
       |> Enum.map(fn attribute ->
         %{
           name: attribute.name,
           title: attribute.name |> to_string |> String.upcase() |> String.replace("_", " "),
-          width: 400,
+          width: 300,
           sort: if(attribute.name == :inserted_at, do: :asc, else: nil),
           read_only: attribute.name in [:id, :inserted_at, :updated_at]
         }
