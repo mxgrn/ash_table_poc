@@ -27,6 +27,13 @@ let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("
 
 let Hooks = {}
 
+// When the input is rendered on place of the cell, select its content
+Hooks.CellEditor = {
+  mounted() {
+    this.el.select()
+  },
+}
+
 Hooks.Resizable = {
   mounted() {
     resizableGrid(this.el, this)
@@ -59,6 +66,7 @@ let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfTo
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+window.addEventListener("try_focus", _e => console.log("FOCUS"))
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

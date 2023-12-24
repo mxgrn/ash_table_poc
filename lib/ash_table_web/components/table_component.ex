@@ -2,6 +2,7 @@ defmodule AshTableWeb.TableComponent do
   use Phoenix.LiveComponent
 
   import AshTableWeb.CoreComponents
+  alias AshTableWeb.RowComponent
 
   @doc """
   Assigns:
@@ -16,7 +17,7 @@ defmodule AshTableWeb.TableComponent do
       |> Enum.map(fn attribute ->
         %{
           name: attribute.name,
-          title: attribute.name |> to_string |> String.capitalize() |> String.replace("_", " "),
+          title: attribute.name |> to_string |> String.upcase() |> String.replace("_", " "),
           width: 400,
           sort: if(attribute.name == :inserted_at, do: :asc, else: nil),
           read_only: attribute.name in [:id, :inserted_at, :updated_at]
@@ -61,10 +62,10 @@ defmodule AshTableWeb.TableComponent do
       phx-target={@myself}
     >
       <thead>
-        <tr class="flex font-bold divide-x" phx-hook="Sortable" id="head-tr">
+        <tr class="flex divide-x" phx-hook="Sortable" id="head-tr">
           <th
             :for={{col, i} <- @cols |> Enum.with_index()}
-            class="inline-flex py-1 px-3 cursor-pointer"
+            class="inline-flex py-1 px-3 cursor-pointer font-light"
             phx-click="sort"
             phx-value-index={i}
             phx-target={@myself}
@@ -78,93 +79,20 @@ defmodule AshTableWeb.TableComponent do
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
-        <tr
-          :for={{row, i} <- @records |> Enum.with_index()}
-          id={"row-#{row.id}"}
-          class="flex divide-x"
-          data={[index: i]}
-        >
-          <td
-            :for={col <- @cols}
-            style={"width: #{col.width}px"}
-            class={unless col.read_only, do: "cursor-pointer"}
-            phx-click={unless col.read_only, do: "start_edit_cell"}
-            phx-value-row_id={row.id}
-            phx-value-field={col.name}
-            phx-target={@myself}
-          >
-            <div
-              :if={!(@editing_cell.field == col.name && @editing_cell.row_id == to_string(row.id))}
-              class="py-1 px-3"
-            >
-              <%= Map.get(row, col.name) %>
-            </div>
-            <div :if={@editing_cell.field == col.name && @editing_cell.row_id == to_string(row.id)}>
-              <input
-                type="text"
-                value={Map.get(row, col.name)}
-                class="p-0 m-0 w-full border-none py-1 px-3"
-                phx-keydown="enter"
-                phx-key="Enter"
-                phx-target={@myself}
-                phx-click-away="stop_edit"
-              />
-            </div>
-          </td>
-          <td class="inline-flex py-1 px-3" style="width: 20px">
-            <.icon name="hero-dots" class="h-3" />
-          </td>
-        </tr>
+        <.live_component
+          :for={record <- @records}
+          module={RowComponent}
+          id={"row-#{record.id}"}
+          record={record}
+          cols={@cols}
+          editing_cell={@editing_cell}
+          phx-click="start_edit_cell"
+          phx-value-row_id={record.id}
+          parent={@myself}
+        />
       </tbody>
     </table>
     """
-  end
-
-  # This only happens when editing_cell is set
-  def handle_event("enter", %{"value" => value} = params, socket) do
-    params |> dbg
-
-    socket.assigns.resource
-    |> AshTable.Library.get!(socket.assigns.editing_cell.row_id)
-    |> Ash.Changeset.for_update(:update, %{
-      socket.assigns.editing_cell.field => value
-    })
-    |> AshTable.Library.update!()
-
-    cols = socket.assigns.cols
-
-    sort =
-      cols
-      |> Enum.find(& &1[:sort])
-      |> case do
-        nil -> []
-        %{name: name, sort: sort_order} -> [{name, sort_order}]
-      end
-
-    records =
-      socket.assigns.resource
-      |> Ash.Query.sort(sort)
-      |> socket.assigns.api.read!()
-
-    {:noreply,
-     assign(socket,
-       editing_cell: %{field: nil, row_id: nil},
-       records: records
-     )}
-  end
-
-  def handle_event("start_edit_cell", params, socket) do
-    {:noreply,
-     assign(socket,
-       editing_cell: %{
-         field: params["field"] |> String.to_existing_atom(),
-         row_id: params["row_id"]
-       }
-     )}
-  end
-
-  def handle_event("stop_edit", _params, socket) do
-    {:noreply, assign(socket, editing_cell: %{field: nil, row_id: nil})}
   end
 
   def handle_event("sort", %{"index" => index} = _params, socket) do

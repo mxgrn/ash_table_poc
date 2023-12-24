@@ -52,7 +52,8 @@ defmodule AshTable.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
       {:ash, "~> 2.16.1"},
-      {:ash_postgres, "~> 1.3.6"}
+      {:ash_postgres, "~> 1.3.6"},
+      {:ash_admin, "~> 0.10.0"}
     ]
   end
 

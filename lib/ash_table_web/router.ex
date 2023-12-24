@@ -1,5 +1,6 @@
 defmodule AshTableWeb.Router do
   use AshTableWeb, :router
+  import AshAdmin.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -12,6 +13,12 @@ defmodule AshTableWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  scope "/" do
+    pipe_through :browser
+
+    ash_admin("/admin")
   end
 
   scope "/", AshTableWeb do
