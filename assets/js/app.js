@@ -30,13 +30,23 @@ let Hooks = {}
 // When the input is rendered on place of the cell, select its content
 Hooks.CellEditor = {
   mounted() {
-    this.el.select()
+    this.el.select();
+  },
+}
+
+Hooks.Cell = {
+  mounted() {
+    this.el.select();
   },
 }
 
 Hooks.Resizable = {
   mounted() {
-    resizableGrid(this.el, this)
+    resizableGrid(this.el, this);
+    this.el.addEventListener('dblclick', e => {
+      let attr = e.target.getAttribute("data-dblclick");
+      liveSocket.execJS(e.target, attr)
+    });
   },
   // So it keeps working after liveview updates
   updated() {
@@ -66,7 +76,6 @@ let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfTo
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
-window.addEventListener("try_focus", _e => console.log("FOCUS"))
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

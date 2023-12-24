@@ -34,13 +34,19 @@ defmodule AshTableWeb.RowComponent do
         :for={col <- @cols}
         style={"width: #{col.width}px"}
         class={unless col.read_only, do: "cursor-pointer"}
-        phx-click={unless col.read_only, do: "start_edit_cell"}
         phx-value-row_id={@record.id}
         phx-value-field={col.name}
         phx-target={@myself}
       >
         <div :if={!(@editing_field == col.name |> to_string)} class="py-1 px-3">
-          <%= Map.get(@record, col.name) %>
+          <div
+            data-dblclick={unless col.read_only, do: JS.push("start_edit_cell")}
+            phx-value-row_id={@record.id}
+            phx-value-field={col.name}
+            phx-target={@myself}
+          >
+            <%= Map.get(@record, col.name) %>
+          </div>
         </div>
         <div :if={@editing_field == col.name |> to_string}>
           <input
