@@ -19,7 +19,7 @@ defmodule AshTableWeb.TableComponent do
         %{
           name: attribute.name,
           title: attribute.name |> to_string |> String.upcase() |> String.replace("_", " "),
-          width: 300,
+          width: default_width(attribute.type),
           sort: if(attribute.name == :inserted_at, do: :asc, else: nil),
           read_only: attribute.name in [:id, :inserted_at, :updated_at]
         }
@@ -178,4 +178,7 @@ defmodule AshTableWeb.TableComponent do
     </span>
     """
   end
+
+  defp default_width(Ash.Type.Integer), do: 100
+  defp default_width(_), do: 300
 end
