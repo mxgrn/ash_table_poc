@@ -1,8 +1,14 @@
 defmodule AshTableWeb.TableComponent do
   use Phoenix.LiveComponent
 
+  use Phoenix.VerifiedRoutes,
+    endpoint: AshTableWeb.Endpoint,
+    router: AshTableWeb.Router,
+    statics: AshTableWeb.static_paths()
+
   import AshTableWeb.CoreComponents
   alias AshTableWeb.RowComponent
+  alias Phoenix.LiveView.JS
 
   @doc """
   Assigns:
@@ -55,45 +61,69 @@ defmodule AshTableWeb.TableComponent do
 
   def render(assigns) do
     ~H"""
-    <table
-      class="w-1/3 divide-y divide-gray-300 bg-gray-50"
-      phx-hook="Resizable"
-      id="tableId"
-      phx-click-away="stop_edit"
-      phx-target={@myself}
-    >
-      <thead>
-        <tr class="flex divide-x bg-gray-100" phx-hook="Sortable" id="head-tr">
-          <th
-            :for={{col, i} <- @cols |> Enum.with_index()}
-            class="inline-flex py-1 px-3 cursor-pointer font-light"
-            phx-click="sort"
-            phx-value-index={i}
-            phx-target={@myself}
-            style={"width: #{col.width}px"}
-            data={[index: i]}
-          >
-            <%= col.title %>
-            <.sort_icon col={col} />
-          </th>
-          <th class="inline-flex py-1 px-3" style="width: 20px"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
+    <div class="w-fit overflow-hidden divide-y border-solid border border-gray-300">
+      <table
+        class="w-1/3 divide-y divide-gray-300 bg-gray-50"
+        phx-hook="Resizable"
+        id="tableId"
+        phx-target={@myself}
+      >
+        <thead>
+          <tr class="flex divide-x bg-gray-100" phx-hook="Sortable" id="head-tr">
+            <th
+              :for={{col, i} <- @cols |> Enum.with_index()}
+              class="inline-flex py-1 px-3 cursor-pointer font-light"
+              phx-click="sort"
+              phx-value-index={i}
+              phx-target={@myself}
+              style={"width: #{col.width}px"}
+              data={[index: i]}
+            >
+              <%= col.title %>
+              <.sort_icon col={col} />
+            </th>
+            <th class="inline-flex py-1 px-3" style="width: 20px"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <.live_component
+            :for={record <- @records}
+            module={RowComponent}
+            id={"row-#{record.id}"}
+            record={record}
+            cols={@cols}
+            editing_cell={@editing_cell}
+            phx-click="start_edit_cell"
+            phx-value-row_id={record.id}
+            parent={@myself}
+          />
+        </tbody>
+      </table>
+      <div class="flex px-3 py-2 bg-gray-100">
+        <button
+          phx-click={JS.patch("/books/new")}
+          type="button"
+          class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        >
+          <.icon name="hero-plus" class="h-4 -mt-1" />Add
+        </button>
+      </div>
+
+      <.modal :if={@live_action in [:new, :edit]} id="modal" show on_cancel={JS.patch(~p"/books")}>
         <.live_component
-          :for={record <- @records}
-          module={RowComponent}
-          id={"row-#{record.id}"}
-          record={record}
-          cols={@cols}
-          editing_cell={@editing_cell}
-          phx-click="start_edit_cell"
-          phx-value-row_id={record.id}
-          parent={@myself}
+          module={AshTableWeb.FormComponent}
+          resource={@resource}
+          api={@api}
+          id="form"
+          name="book"
         />
-      </tbody>
-    </table>
+      </.modal>
+    </div>
     """
+  end
+
+  def handle_event("show_add_modal", _params, socket) do
+    {:noreply, assign(socket, show_add_modal: true)}
   end
 
   def handle_event("sort", %{"index" => index} = _params, socket) do
