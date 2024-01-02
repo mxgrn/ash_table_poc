@@ -13,16 +13,21 @@ defmodule AshTableWeb.FormComponent do
     resource = assigns.resource
     api = assigns.api
 
+    # Info.fields(resource)
+    # |> Enum.reject(fn attribute -> attribute.name in [:id] end)
+    # |> Enum.map(fn attribute ->
+    #   %{
+    #     name: attribute.name,
+    #     title: attribute.name |> to_string |> String.upcase() |> String.replace("_", " "),
+    #     read_only: attribute.name in [:id, :inserted_at, :updated_at]
+    #   }
+    # end)
     fields =
-      Info.fields(resource)
-      |> Enum.reject(fn attribute -> attribute.name in [:id] end)
-      |> Enum.map(fn attribute ->
-        %{
-          name: attribute.name,
-          title: attribute.name |> to_string |> String.upcase() |> String.replace("_", " "),
-          read_only: attribute.name in [:id, :inserted_at, :updated_at]
-        }
-      end)
+      resource
+      |> Ash.Resource.Info.attributes()
+      |> Enum.reject(fn attribute -> attribute.name in [:id, :inserted_at, :updated_at] end)
+
+    fields |> dbg
 
     form =
       if assigns.live_action == :new do
@@ -89,13 +94,13 @@ defmodule AshTableWeb.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Flash")
-         |> push_patch(to: "/#{Info.plural_name(socket.assigns.resource)}")}
+         |> push_patch(to: "/ash/#{Info.plural_name(socket.assigns.resource)}")}
 
       :ok ->
         {:noreply,
          socket
          |> put_flash(:info, "Flash")
-         |> push_patch(to: "/#{Info.plural_name(socket.assigns.resource)}")}
+         |> push_patch(to: "/ash/#{Info.plural_name(socket.assigns.resource)}")}
 
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
@@ -112,23 +117,65 @@ defmodule AshTableWeb.FormComponent do
         >
           <%= to_name(attribute.name) %>
         </label>
-        <%= render_attribute_input(assigns, attribute, @form) %>
+        <%= render_attribute_input(assigns, attribute, @form, nil, nil) %>
       </div>
     </div>
     """
   end
 
-  defp render_attribute_input(assigns, attribute, form) do
+  def render_attribute_input(assigns, %{type: Ash.Type.Date} = attribute, form, value, name) do
+    assigns = assign(assigns, form: form, value: value, name: name, attribute: attribute)
+
+    ~H"""
+    <.input
+      type="date"
+      value={value(@value, @form, @attribute)}
+      name={@name || @form.name <> "[#{@attribute.name}]"}
+      id={@form.id <> "_#{@attribute.name}"}
+    />
+    """
+  end
+
+  def render_attribute_input(assigns, attribute, form, _value, _name) do
+    attribute |> dbg
     assigns = assign(assigns, attribute: attribute, form: form)
 
     ~H"""
     <.input
       type="text"
       field={@form[@attribute.name]}
-      disabled={@attribute.read_only}
+      disabled={false && @attribute.read_only}
       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
     />
     """
+  end
+
+  defp value(value, form, attribute, default \\ nil)
+
+  defp value({:list_value, nil}, _, _, default), do: default
+  defp value({:list_value, value}, _, _, _), do: value
+
+  defp value(value, _form, _attribute, _) when not is_nil(value), do: value
+
+  defp value(_value, form, attribute, default) do
+    value = Phoenix.HTML.FormData.input_value(form.source, form, attribute.name)
+
+    case value do
+      nil ->
+        case attribute.default do
+          nil ->
+            default
+
+          func when is_function(func) ->
+            default
+
+          attribute_default ->
+            attribute_default
+        end
+
+      value ->
+        value
+    end
   end
 
   def to_name(:id), do: "ID"

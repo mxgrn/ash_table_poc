@@ -57,7 +57,7 @@ defmodule AshTableWeb.TableComponent do
       </table>
       <div class="flex px-3 py-2 bg-gray-100 gap-2">
         <button
-          phx-click={JS.patch("/#{Info.plural_name(@resource)}/new")}
+          phx-click={JS.patch("/ash/#{Info.plural_name(@resource)}/new")}
           type="button"
           class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
         >
@@ -66,7 +66,7 @@ defmodule AshTableWeb.TableComponent do
         <button
           phx-click={
             @can_edit? &&
-              JS.patch("/#{Info.plural_name(@resource)}/#{@selected_rows |> hd |> elem(0)}/edit")
+              JS.patch("/ash/#{Info.plural_name(@resource)}/#{@selected_rows |> hd |> elem(0)}/edit")
           }
           type="button"
           class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
@@ -81,7 +81,7 @@ defmodule AshTableWeb.TableComponent do
         :if={@live_action in [:new, :edit]}
         id="modal"
         show
-        on_cancel={JS.patch("/#{Info.plural_name(@resource)}")}
+        on_cancel={JS.patch("/ash/#{Info.plural_name(@resource)}")}
       >
         <.live_component
           module={AshTableWeb.FormComponent}
@@ -257,6 +257,7 @@ defmodule AshTableWeb.TableComponent do
   end
 
   defp default_width(Ash.Type.Integer), do: 100
+  defp default_width(Ash.Type.Date), do: 150
   defp default_width(_), do: 300
 
   # defp record_by_id(records, id) do

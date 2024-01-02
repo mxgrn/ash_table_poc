@@ -1,7 +1,6 @@
-defmodule AshTableWeb.BooksLive do
+defmodule AshTableWeb.Ash.BooksLive do
   use Phoenix.LiveView
   alias AshTableWeb.TableComponent
-  # import AshTableWeb.CoreComponents
 
   def render(assigns) do
     ~H"""
@@ -16,10 +15,6 @@ defmodule AshTableWeb.BooksLive do
       />
     </div>
     """
-  end
-
-  def handle_info(:select, socket) do
-    {:noreply, assign(socket, :dirty_form, true)}
   end
 
   def handle_params(params, _url, socket) do

@@ -61,7 +61,7 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :ash_table, :ash_apis, [AshTable.Library]
+config :ash_table, :ash_apis, [AshTable.Library, AshTable.Ash.Users]
 
 config :ash_table, :ecto_repos, [AshTable.Repo]
 

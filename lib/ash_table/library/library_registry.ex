@@ -3,5 +3,6 @@ defmodule AshTable.Library.Registry do
 
   entries do
     entry AshTable.Book
+    entry AshTable.User
   end
 end

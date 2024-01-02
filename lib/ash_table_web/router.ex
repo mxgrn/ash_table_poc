@@ -24,11 +24,26 @@ defmodule AshTableWeb.Router do
   scope "/", AshTableWeb do
     pipe_through :browser
 
-    # get "/", PageController, :home
-    live "/", BooksLive, :index
+    live "/", Ash.UsersLive, :index
+
+    # Traditional live views
+    live "/users", UserLive.Index, :index
+    live "/users/new", UserLive.Index, :new
+    live "/users/:id", UserLive.Show, :show
+    live "/users/:id/show/edit", UserLive.Show, :edit
+  end
+
+  scope "/ash", AshTableWeb.Ash do
+    pipe_through :browser
+
     live "/books", BooksLive, :index
     live "/books/new", BooksLive, :new
     live "/books/:id/edit", BooksLive, :edit
+
+    live "/users", UsersLive, :index
+    live "/users/new", UsersLive, :new
+    live "/users/:id", UsersLive, :show
+    live "/users/:id/edit", UsersLive, :edit
   end
 
   # Other scopes may use custom stacks.
