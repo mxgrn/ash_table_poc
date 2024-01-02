@@ -1,10 +1,14 @@
 defmodule AshTableWeb.RowComponent do
   use Phoenix.LiveComponent
-  import AshTableWeb.CoreComponents
   alias Phoenix.LiveView.JS
 
   def update(assigns, socket) do
-    {:ok, assign(socket, Map.merge(assigns, %{editing_field: assigns[:editing_field]}))}
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign_new(:selected, fn -> false end)
+     |> assign_new(:editing_field, fn -> nil end)
+     |> assign_new(:record, fn -> nil end)}
   end
 
   def handle_event("start_edit_cell", params, socket) do
@@ -13,6 +17,22 @@ defmodule AshTableWeb.RowComponent do
 
   def handle_event("stop_edit", _params, socket) do
     {:noreply, assign(socket, editing_field: nil)}
+  end
+
+  def handle_event("select", _params, socket) do
+    if socket.assigns.selected do
+      send_update(
+        socket.assigns.parent,
+        unselect_row: socket.assigns.record.id
+      )
+    else
+      send_update(
+        socket.assigns.parent,
+        select_row: {socket.assigns.record.id, socket.assigns.myself}
+      )
+    end
+
+    {:noreply, assign(socket, selected: !socket.assigns.selected)}
   end
 
   # This only happens when editing_cell is set
@@ -29,7 +49,14 @@ defmodule AshTableWeb.RowComponent do
 
   def render(assigns) do
     ~H"""
-    <tr class="flex divide-x hover:bg-gray-100" data={[index: @record.id]} id={"tr-#{@record.id}"}>
+    <tr
+      class={"flex divide-x hover:bg-gray-100 #{if @selected, do: "hover:bg-yellow-200 bg-yellow-100"}"}
+      data={[index: @record.id]}
+      id={"tr-#{@record.id}"}
+      phx-click="select"
+      phx-target={@myself}
+      phx-value-row_id={@record.id}
+    >
       <td
         :for={col <- @cols}
         style={"width: #{col.width}px"}
@@ -62,9 +89,6 @@ defmodule AshTableWeb.RowComponent do
             phx-click-away="stop_edit"
           />
         </div>
-      </td>
-      <td class="inline-flex py-1 px-3" style="width: 20px">
-        <.icon name="hero-dots" class="h-3" />
       </td>
     </tr>
     """

@@ -6,9 +6,18 @@ defmodule AshTable.Book do
     repo AshTable.Repo
   end
 
+  # required
+  resource do
+    plural_name :books
+  end
+
   attributes do
     uuid_primary_key :id
-    attribute :title, :string
+
+    attribute :title, :string do
+      allow_nil?(false)
+    end
+
     attribute :author, :string
     attribute :year, :integer
     timestamps()

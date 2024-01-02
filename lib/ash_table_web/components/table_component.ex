@@ -1,16 +1,131 @@
 defmodule AshTableWeb.TableComponent do
   use Phoenix.LiveComponent
 
-  import AshTableWeb.CoreComponents
-  alias AshTableWeb.RowComponent
+  # TODO: move out
+  use Phoenix.VerifiedRoutes,
+    endpoint: AshTableWeb.Endpoint,
+    router: AshTableWeb.Router,
+    statics: AshTableWeb.static_paths()
 
-  @doc """
-  Assigns:
-    - resource: The Ash resource module
-  """
+  import AshTableWeb.CoreComponents
+
+  alias AshTableWeb.RowComponent
+  alias Phoenix.LiveView.JS
+  alias Ash.Resource.Info
+
+  attr :resource, :atom
+  attr :record, :any
+
+  def render(assigns) do
+    ~H"""
+    <div class="w-fit overflow-hidden divide-y border-solid border border-gray-300">
+      <table
+        class="w-1/3 divide-y divide-gray-300 bg-gray-50"
+        phx-hook="Resizable"
+        id="tableId"
+        phx-target={@myself}
+      >
+        <thead>
+          <tr class="flex divide-x bg-gray-100" phx-hook="Sortable" id="head-tr">
+            <th
+              :for={{col, i} <- @cols |> Enum.with_index()}
+              class="inline-flex py-1 px-3 cursor-pointer font-light"
+              phx-click="sort"
+              phx-value-index={i}
+              phx-target={@myself}
+              style={"width: #{col.width}px"}
+              data={[index: i]}
+            >
+              <%= col.title %>
+              <.sort_icon col={col} />
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <.live_component
+            :for={record <- @records}
+            module={RowComponent}
+            id={"row-#{record.id}"}
+            record={record}
+            cols={@cols}
+            editing_cell={@editing_cell}
+            phx-click="start_edit_cell"
+            phx-value-row_id={record.id}
+            parent={@myself}
+          />
+        </tbody>
+      </table>
+      <div class="flex px-3 py-2 bg-gray-100 gap-2">
+        <button
+          phx-click={JS.patch("/#{Info.plural_name(@resource)}/new")}
+          type="button"
+          class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        >
+          <.icon name="hero-plus" class="h-4 -mt-1" />Create
+        </button>
+        <button
+          phx-click={
+            @can_edit? &&
+              JS.patch("/#{Info.plural_name(@resource)}/#{@selected_rows |> hd |> elem(0)}/edit")
+          }
+          type="button"
+          class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+          }
+          disabled={not @can_edit?}
+        >
+          <.icon name="hero-pencil" class="h-4 -mt-1" />Edit
+        </button>
+      </div>
+
+      <.modal
+        :if={@live_action in [:new, :edit]}
+        id="modal"
+        show
+        on_cancel={JS.patch("/#{Info.plural_name(@resource)}")}
+      >
+        <.live_component
+          module={AshTableWeb.FormComponent}
+          resource={@resource}
+          live_action={@live_action}
+          record={@record}
+          api={@api}
+          id="form"
+          name="book"
+        />
+      </.modal>
+    </div>
+    """
+  end
+
+  def update(%{select_row: row}, socket) do
+    selected_rows = [row | socket.assigns.selected_rows]
+
+    {:ok,
+     assign(socket, :selected_rows, selected_rows)
+     |> assign(:can_edit?, length(selected_rows) == 1)}
+  end
+
+  def update(%{unselect_row: record_id}, socket) do
+    selected_rows = socket.assigns.selected_rows |> Enum.reject(fn {id, _} -> id == record_id end)
+
+    {:ok,
+     assign(socket, :selected_rows, selected_rows)
+     |> assign(:can_edit?, length(selected_rows) == 1)}
+  end
+
   def update(assigns, socket) do
-    resource = assigns.resource
-    api = assigns.api
+    socket =
+      assign(socket, assigns)
+      |> assign_new(:selected_rows, fn -> [] end)
+      |> assign_new(:can_edit?, fn -> false end)
+
+    resource = socket.assigns.resource
+
+    resource |> dbg
+
+    api = socket.assigns.api
+
+    record = socket.assigns.resource_id && api.get!(resource, socket.assigns.resource_id)
 
     cols =
       Ash.Resource.Info.fields(resource)
@@ -45,6 +160,7 @@ defmodule AshTableWeb.TableComponent do
          api: api,
          records: records,
          cols: cols,
+         record: record,
          editing_cell: %{
            field: nil,
            row_id: nil
@@ -53,47 +169,8 @@ defmodule AshTableWeb.TableComponent do
      )}
   end
 
-  def render(assigns) do
-    ~H"""
-    <table
-      class="w-1/3 divide-y divide-gray-300 bg-gray-50"
-      phx-hook="Resizable"
-      id="tableId"
-      phx-click-away="stop_edit"
-      phx-target={@myself}
-    >
-      <thead>
-        <tr class="flex divide-x bg-gray-100" phx-hook="Sortable" id="head-tr">
-          <th
-            :for={{col, i} <- @cols |> Enum.with_index()}
-            class="inline-flex py-1 px-3 cursor-pointer font-light"
-            phx-click="sort"
-            phx-value-index={i}
-            phx-target={@myself}
-            style={"width: #{col.width}px"}
-            data={[index: i]}
-          >
-            <%= col.title %>
-            <.sort_icon col={col} />
-          </th>
-          <th class="inline-flex py-1 px-3" style="width: 20px"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <.live_component
-          :for={record <- @records}
-          module={RowComponent}
-          id={"row-#{record.id}"}
-          record={record}
-          cols={@cols}
-          editing_cell={@editing_cell}
-          phx-click="start_edit_cell"
-          phx-value-row_id={record.id}
-          parent={@myself}
-        />
-      </tbody>
-    </table>
-    """
+  def handle_event("show_add_modal", _params, socket) do
+    {:noreply, assign(socket, show_add_modal: true)}
   end
 
   def handle_event("sort", %{"index" => index} = _params, socket) do
@@ -181,4 +258,8 @@ defmodule AshTableWeb.TableComponent do
 
   defp default_width(Ash.Type.Integer), do: 100
   defp default_width(_), do: 300
+
+  # defp record_by_id(records, id) do
+  #   Enum.find(records, &(&1.id == id))
+  # end
 end
