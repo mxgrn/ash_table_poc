@@ -112,7 +112,6 @@ function resizableGrid(table, hook) {
     var pageX, curCol, nxtCol, curColWidth, nxtColWidth, tableWidth;
 
     div.addEventListener('mousedown', function(e) {
-
       tableWidth = document.getElementById('tableId').offsetWidth;
       curCol = e.target.parentElement;
       nxtCol = curCol.nextElementSibling;
@@ -133,6 +132,11 @@ function resizableGrid(table, hook) {
     div.addEventListener('mouseout', function(e) {
       window.sortable.option("disabled", false);
       e.target.style.borderRight = '';
+    })
+
+    // prevent propagating of click event to the top <tr> element, which div is a child of
+    div.addEventListener('click', function(e) {
+      e.stopPropagation();
     })
 
     document.addEventListener('mousemove', function(e) {
