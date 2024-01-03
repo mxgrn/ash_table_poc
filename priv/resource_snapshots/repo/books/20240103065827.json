@@ -16,7 +16,7 @@
       "type": "text",
       "source": "title",
       "references": null,
-      "allow_nil?": true,
+      "allow_nil?": false,
       "generated?": false,
       "primary_key?": false
     },
@@ -26,7 +26,7 @@
       "type": "text",
       "source": "author",
       "references": null,
-      "allow_nil?": true,
+      "allow_nil?": false,
       "generated?": false,
       "primary_key?": false
     },
@@ -39,21 +39,41 @@
       "allow_nil?": true,
       "generated?": false,
       "primary_key?": false
+    },
+    {
+      "default": "fragment(\"now()\")",
+      "size": null,
+      "type": "utc_datetime_usec",
+      "source": "inserted_at",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
+    },
+    {
+      "default": "fragment(\"now()\")",
+      "size": null,
+      "type": "utc_datetime_usec",
+      "source": "updated_at",
+      "references": null,
+      "allow_nil?": false,
+      "generated?": false,
+      "primary_key?": false
     }
   ],
   "table": "books",
-  "hash": "1C67185126239A564CAD69796818D71E65ABEC3BBC65F056D064C8B58E762776",
+  "hash": "487C161370897C56AF55FD6EA56A89300162A0D2A143B5DB865B58E2421D23C2",
   "repo": "Elixir.AshTable.Repo",
-  "identities": [],
   "schema": null,
+  "identities": [],
   "multitenancy": {
     "global": null,
-    "strategy": null,
-    "attribute": null
+    "attribute": null,
+    "strategy": null
   },
   "base_filter": null,
   "check_constraints": [],
   "custom_indexes": [],
   "custom_statements": [],
-  "has_create_action": false
+  "has_create_action": true
 }

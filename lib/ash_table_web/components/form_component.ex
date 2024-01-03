@@ -27,8 +27,6 @@ defmodule AshTableWeb.FormComponent do
       |> Ash.Resource.Info.attributes()
       |> Enum.reject(fn attribute -> attribute.name in [:id, :inserted_at, :updated_at] end)
 
-    fields |> dbg
-
     form =
       if assigns.live_action == :new do
         resource
@@ -137,7 +135,6 @@ defmodule AshTableWeb.FormComponent do
   end
 
   def render_attribute_input(assigns, attribute, form, _value, _name) do
-    attribute |> dbg
     assigns = assign(assigns, attribute: attribute, form: form)
 
     ~H"""

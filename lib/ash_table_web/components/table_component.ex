@@ -121,8 +121,6 @@ defmodule AshTableWeb.TableComponent do
 
     resource = socket.assigns.resource
 
-    resource |> dbg
-
     api = socket.assigns.api
 
     record = socket.assigns.resource_id && api.get!(resource, socket.assigns.resource_id)

@@ -32,6 +32,14 @@ defmodule AshTable.User do
     timestamps()
   end
 
+  validations do
+    validate match(:email, ~r/@/)
+  end
+
+  identities do
+    identity :unique_email, [:email]
+  end
+
   actions do
     defaults [:create, :read, :update, :destroy]
   end
