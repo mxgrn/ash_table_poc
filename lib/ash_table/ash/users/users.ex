@@ -6,6 +6,6 @@ defmodule AshTable.Ash.Users do
   end
 
   resources do
-    registry AshTable.Users.Registry
+    registry AshTable.Ash.Users.Registry
   end
 end

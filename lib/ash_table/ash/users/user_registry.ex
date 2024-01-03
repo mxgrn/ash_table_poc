@@ -1,4 +1,4 @@
-defmodule AshTable.Users.Registry do
+defmodule AshTable.Ash.Users.Registry do
   use Ash.Registry
 
   entries do

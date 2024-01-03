@@ -4,6 +4,10 @@ defmodule AshTableWeb.Ash.UsersLive do
 
   def render(assigns) do
     ~H"""
+    <div class="text-lg font-bold">
+      Ash table demo/POC
+    </div>
+
     <div>
       <.live_component
         module={TableComponent}
@@ -14,6 +18,27 @@ defmodule AshTableWeb.Ash.UsersLive do
         id="users"
       />
     </div>
+
+    <div class="font-bold mt-4">
+      Features
+    </div>
+    <ul class="list-disc pl-4">
+      <li>CRUD, including multi-record deletions</li>
+      <li>Server-side sorting</li>
+      <li>Column resizing</li>
+      <li>Column drag-n-drop</li>
+      <li>Validations</li>
+      <li>Inline editing with a doubleclick (WIP, doesn't support validations)</li>
+    </ul>
+
+    <div class="font-bold mt-4">
+      Code
+    </div>
+
+    <ul class="list-disc pl-4">
+      <li>The User resource <a href="" class="underline">definition</a></li>
+      <li>The ash_table table <a href="" class="underline">configuration</a></li>
+    </ul>
     """
   end
 
