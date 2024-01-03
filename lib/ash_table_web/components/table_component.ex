@@ -13,6 +13,8 @@ defmodule AshTableWeb.TableComponent do
   alias Phoenix.LiveView.JS
   alias Ash.Resource.Info
 
+  require Ash.Query
+
   attr :resource, :atom
   attr :record, :any
 
@@ -63,6 +65,7 @@ defmodule AshTableWeb.TableComponent do
         >
           <.icon name="hero-plus" class="h-4 -mt-1" />Create
         </button>
+
         <button
           phx-click={
             @can_edit? &&
@@ -74,6 +77,21 @@ defmodule AshTableWeb.TableComponent do
           disabled={not @can_edit?}
         >
           <.icon name="hero-pencil" class="h-4 -mt-1" />Edit
+        </button>
+
+        <button
+          phx-click={
+            JS.push("delete")
+            |> hide(@selected_rows |> Enum.map(fn {id, _} -> "#tr-#{id}" end) |> Enum.join(","))
+          }
+          type="button"
+          class="rounded bg-white px-3 py-1 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+          }
+          disabled={not @can_delete?}
+          phx-target={@myself}
+          data-confirm={"Delete #{length(@selected_rows)} record(s)?"}
+        >
+          <.icon name="hero-trash" class="h-4 -mt-1" />Delete
         </button>
       </div>
 
@@ -102,7 +120,8 @@ defmodule AshTableWeb.TableComponent do
 
     {:ok,
      assign(socket, :selected_rows, selected_rows)
-     |> assign(:can_edit?, length(selected_rows) == 1)}
+     |> assign(:can_edit?, length(selected_rows) == 1)
+     |> assign(:can_delete?, length(selected_rows) > 0)}
   end
 
   def update(%{unselect_row: record_id}, socket) do
@@ -110,7 +129,8 @@ defmodule AshTableWeb.TableComponent do
 
     {:ok,
      assign(socket, :selected_rows, selected_rows)
-     |> assign(:can_edit?, length(selected_rows) == 1)}
+     |> assign(:can_edit?, length(selected_rows) == 1)
+     |> assign(:can_delete?, length(selected_rows) > 0)}
   end
 
   def update(assigns, socket) do
@@ -118,6 +138,7 @@ defmodule AshTableWeb.TableComponent do
       assign(socket, assigns)
       |> assign_new(:selected_rows, fn -> [] end)
       |> assign_new(:can_edit?, fn -> false end)
+      |> assign_new(:can_delete?, fn -> false end)
 
     resource = socket.assigns.resource
 
@@ -245,6 +266,22 @@ defmodule AshTableWeb.TableComponent do
     {:noreply, assign(socket, cols: cols)}
   end
 
+  def handle_event("delete", _params, socket) do
+    ids =
+      socket.assigns.selected_rows
+      |> Enum.map(fn {id, _} -> id end)
+
+    socket.assigns.api |> dbg
+
+    socket.assigns.resource
+    |> Ash.Query.filter(id in ^ids)
+    |> socket.assigns.api.read!()
+    |> Enum.each(fn record -> socket.assigns.api.destroy!(record) end)
+
+    # Update the width of the column in assigns
+    {:noreply, assign(socket, selected_rows: [], can_edit?: false, can_delete?: false)}
+  end
+
   defp sort_icon(assigns) do
     ~H"""
     <span :if={@col[:sort]} class="ml-2 flex-none rounded text-gray-900 group-hover:bg-gray-200">
@@ -257,8 +294,4 @@ defmodule AshTableWeb.TableComponent do
   defp default_width(Ash.Type.Integer), do: 100
   defp default_width(Ash.Type.Date), do: 150
   defp default_width(_), do: 300
-
-  # defp record_by_id(records, id) do
-  #   Enum.find(records, &(&1.id == id))
-  # end
 end

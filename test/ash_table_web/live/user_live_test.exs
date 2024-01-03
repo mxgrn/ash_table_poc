@@ -4,8 +4,18 @@ defmodule AshTableWeb.UserLiveTest do
   import Phoenix.LiveViewTest
   import AshTable.UsersFixtures
 
-  @create_attrs %{first_name: "some first_name", last_name: "some last_name", email: "some email", birthdate: "2024-01-01"}
-  @update_attrs %{first_name: "some updated first_name", last_name: "some updated last_name", email: "some updated email", birthdate: "2024-01-02"}
+  @create_attrs %{
+    first_name: "some first_name",
+    last_name: "some last_name",
+    email: "some email",
+    birthdate: "2024-01-01"
+  }
+  @update_attrs %{
+    first_name: "some updated first_name",
+    last_name: "some updated last_name",
+    email: "some updated email",
+    birthdate: "2024-01-02"
+  }
   @invalid_attrs %{first_name: nil, last_name: nil, email: nil, birthdate: nil}
 
   defp create_user(_) do
