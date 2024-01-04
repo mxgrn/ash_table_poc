@@ -23,7 +23,6 @@ defmodule AshTableWeb.Ash.UsersLive do
       Features
     </div>
     <ul class="list-disc pl-4">
-      <li>Multi-row selection</li>
       <li>CRUD, including multi-record deletions</li>
       <li>Server-side sorting</li>
       <li>Column resizing (tbd: persistence)</li>
